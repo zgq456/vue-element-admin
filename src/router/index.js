@@ -79,7 +79,7 @@ export const constantRoutes = [
         path: '/app_mgnt/index',
         component: () => import('@/views/app_mgnt/index'),
         name: 'Guide',
-        meta: { title: '项目管理', icon: 'guide', noCache: true }
+        meta: { title: '配置管理', icon: 'guide', noCache: true }
       }
     ]
   }
