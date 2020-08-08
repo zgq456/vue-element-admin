@@ -75,7 +75,7 @@
         >
           <template slot-scope="scope">
             <!--          <el-button size="mini" type="primary" round >推送</el-button> 修改后提示推送-->
-            <el-button size="mini" type="primary" round>机器</el-button>
+            <el-button size="mini" type="primary" round @click="showModuleInfoList(scope.row)">机器</el-button>
             <el-button size="mini" type="primary" round>修改</el-button>
             <el-button size="mini" type="primary" round>删除</el-button>
           </template>
@@ -86,73 +86,78 @@
       </el-row>
     </div>
 
-    <h3>gs-service test 已安装机器列表</h3>
-    <el-table
-      :data="machineList"
-      style="width: 100%"
-    >
-      <el-table-column
-        prop="ip"
-        label="IP"
-        width="150px"
-      />
-      <el-table-column
-        prop="port"
-        label="port"
-        width="100px"
-      />
-      <el-table-column
-        prop="username"
-        label="用户名"
-        width="100px"
-      />
-      <el-table-column
-        prop="password"
-        label="密码"
-        width="100px"
-      />
-      <el-table-column
-        prop="private_rsa_file"
-        label="密钥文件"
-      />
-      <el-table-column
-        prop="status"
-        label="状态"
-        width="100px"
+    <div v-if="currentAppName && currentEnvName">
+      <h3>{{ currentAppName }} {{ currentEnvName }} 已安装机器列表</h3>
+      <el-table
+        :data="moduleList"
+        style="width: 100%"
       >
-        <template slot-scope="scope">
-          {{ scope.row.status }}<i class="el-icon-refresh-right" style="cursor: pointer" />
-        </template>
-      </el-table-column>
-      <el-table-column
-        prop="lastModifiedDate"
-        label="更新时间"
-        width="100px"
-      />
-      <el-table-column
-        label="操作"
-        width="300px"
-      >
-        <template slot-scope="scope">
-          <el-button size="mini" type="primary" round>冻结/激活</el-button>
-          <el-button size="mini" type="primary" round>修改</el-button>
-          <el-button size="mini" type="primary" round>删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-row style="margin-top: 5px;">
-      <el-button size="mini" type="primary" round>增加机器</el-button>
-    </el-row>
+        <el-table-column
+          prop="ip"
+          label="IP"
+          width="150px"
+        />
+        <el-table-column
+          prop="port"
+          label="port"
+          width="100px"
+        />
+        <el-table-column
+          prop="username"
+          label="用户名"
+          width="100px"
+        />
+        <el-table-column
+          prop="password"
+          label="密码"
+          width="100px"
+        />
+        <el-table-column
+          prop="private_rsa_file"
+          label="密钥文件"
+        />
+        <el-table-column
+          prop="status"
+          label="状态"
+          width="100px"
+        >
+          <template slot-scope="scope">
+            {{ scope.row.status }}<i class="el-icon-refresh-right" style="cursor: pointer" />
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="gmtModified"
+          label="更新时间"
+          width="100px"
+          :formatter="formatDate"
+        />
+        <el-table-column
+          label="操作"
+          width="300px"
+        >
+          <template slot-scope="scope">
+            <el-button size="mini" type="primary" round>冻结/激活</el-button>
+            <el-button size="mini" type="primary" round>修改</el-button>
+            <el-button size="mini" type="primary" round>删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-row style="margin-top: 5px;">
+        <el-button size="mini" type="primary" round>增加机器</el-button>
+      </el-row>
+    </div>
+
   </div>
 </template>
 
 <script>
-import { fetchAppList, fetchConfigInfoList } from '@/api/app'
+import { fetchAppList, fetchConfigInfoList, fetchModuleInfoList } from '@/api/app'
 export default {
   name: 'AppMgnt',
   data() {
     return {
       currentAppName: null,
+      currentEnvName: null,
       appList: [],
       appListTest: [{
         name: 'gs-service',
@@ -182,7 +187,7 @@ export default {
         createdDate: '2020-08-08',
         lastModifiedDate: '2020-08-08'
       }],
-      machineList: [
+      moduleList: [
         {
           ip: '192.168.1.1',
           port: '22',
@@ -232,10 +237,19 @@ export default {
     },
     showModuleConfigList(app) {
       this.currentAppName = app.name
+      this.currentEnvName = null
       const appId = app.id
       fetchConfigInfoList({ appId }).then(response => {
         // console.log('response:', response)
         this.envList = response
+      })
+    },
+    showModuleInfoList(config) {
+      this.currentEnvName = config.environment
+      const configId = config.id
+      fetchModuleInfoList({ configId }).then(response => {
+        // console.log('response:', response)
+        this.moduleList = response
       })
     }
 

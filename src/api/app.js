@@ -18,3 +18,11 @@ export function fetchConfigInfoList(query) {
   })
 }
 
+export function fetchModuleInfoList(query) {
+  return request({
+    url: baseUrl + 'module/list',
+    method: 'get',
+    params: query
+  })
+}
+
