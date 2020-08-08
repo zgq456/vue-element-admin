@@ -28,7 +28,7 @@
         label="操作"
       >
         <template slot-scope="scope">
-          <el-button size="mini" type="primary" round>环境</el-button>
+          <el-button size="mini" type="primary" round @click="showModuleConfigList(scope.row)">环境</el-button>
           <el-button size="mini" type="primary" round>修改</el-button>
           <el-button size="mini" type="primary" round>删除</el-button>
         </template>
@@ -38,45 +38,53 @@
       <el-button size="mini" type="primary" round>增加应用</el-button>
     </el-row>
 
-    <h3>gs-service 环境配置列表</h3>
-    <el-table
-      :data="envList"
-      style="width: 100%"
-    >
-      <el-table-column
-        prop="name"
-        label="环境"
-        width="100px"
-      />
-      <el-table-column
-        prop="config"
-        label="配置信息"
-      />
-      <el-table-column
-        prop="createdDate"
-        label="创建时间"
-        width="100px"
-      />
-      <el-table-column
-        prop="lastModifiedDate"
-        label="更新时间"
-        width="100px"
-      />
-      <el-table-column
-        label="操作"
-        width="250px"
+    <div v-if="currentAppName">
+      <h3>{{ currentAppName }} 环境配置列表</h3>
+      <el-table
+        :data="envList"
+        style="width: 100%"
       >
-        <template slot-scope="scope">
-          <!--          <el-button size="mini" type="primary" round >推送</el-button> 修改后提示推送-->
-          <el-button size="mini" type="primary" round>机器</el-button>
-          <el-button size="mini" type="primary" round>修改</el-button>
-          <el-button size="mini" type="primary" round>删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-row style="margin-top: 5px;">
-      <el-button size="mini" type="primary" round>增加环境配置</el-button>
-    </el-row>
+        <el-table-column
+          prop="environment"
+          label="环境"
+          width="100px"
+        />
+        <el-table-column
+          prop="config"
+          label="配置信息"
+        >
+          <template slot-scope="scope">
+            <span v-if="scope.row.config">'{sampleRate=10000, plugin=[http, java-entrance, java-subInvoke]}'</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="gmtCreate"
+          label="创建时间"
+          width="100px"
+          :formatter="formatDate"
+        />
+        <el-table-column
+          prop="gmtModified"
+          label="更新时间"
+          width="100px"
+          :formatter="formatDate"
+        />
+        <el-table-column
+          label="操作"
+          width="250px"
+        >
+          <template slot-scope="scope">
+            <!--          <el-button size="mini" type="primary" round >推送</el-button> 修改后提示推送-->
+            <el-button size="mini" type="primary" round>机器</el-button>
+            <el-button size="mini" type="primary" round>修改</el-button>
+            <el-button size="mini" type="primary" round>删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-row style="margin-top: 5px;">
+        <el-button size="mini" type="primary" round>增加环境配置</el-button>
+      </el-row>
+    </div>
 
     <h3>gs-service test 已安装机器列表</h3>
     <el-table
@@ -139,11 +147,12 @@
 </template>
 
 <script>
-import { fetchAppList } from '@/api/app'
+import { fetchAppList, fetchConfigInfoList } from '@/api/app'
 export default {
   name: 'AppMgnt',
   data() {
     return {
+      currentAppName: null,
       appList: [],
       appListTest: [{
         name: 'gs-service',
@@ -161,7 +170,8 @@ export default {
         createdDate: '2020-08-08',
         lastModifiedDate: '2020-08-08'
       }],
-      envList: [{
+      envList: [],
+      envListTest: [{
         name: 'test',
         config: '{sampleRate=10000, plugin=[http, java-entrance, java-subInvoke]}',
         createdDate: '2020-08-08',
@@ -207,16 +217,28 @@ export default {
     }
   },
   mounted() {
-    fetchAppList().then(response => {
-      // console.log('response:', response)
-      this.appList = response.data.data
-    })
+    this.loadAppList()
   },
   methods: {
     formatDate(row, column, date) {
       date = new Date(date)
       return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate()
+    },
+    loadAppList() {
+      fetchAppList().then(response => {
+        // console.log('response:', response)
+        this.appList = response.data
+      })
+    },
+    showModuleConfigList(app) {
+      this.currentAppName = app.name
+      const appId = app.id
+      fetchConfigInfoList({ appId }).then(response => {
+        // console.log('response:', response)
+        this.envList = response
+      })
     }
+
   }
 }
 </script>

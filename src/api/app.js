@@ -1,8 +1,18 @@
 import request from '@/utils/request'
 
+const baseUrl = 'http://localhost:8001/'
+
 export function fetchAppList(query) {
   return request({
-    url: 'http://localhost:8001/app/list',
+    url: baseUrl + 'app/list',
+    method: 'get',
+    params: query
+  })
+}
+
+export function fetchConfigInfoList(query) {
+  return request({
+    url: baseUrl + 'config/list',
     method: 'get',
     params: query
   })
