@@ -15,12 +15,14 @@
         label="备注"
       />
       <el-table-column
-        prop="createdDate"
+        prop="gmtCreate"
         label="创建时间"
+        :formatter="formatDate"
       />
       <el-table-column
-        prop="lastModifiedDate"
+        prop="gmtModified"
         label="更新时间"
+        :formatter="formatDate"
       />
       <el-table-column
         label="操作"
@@ -137,11 +139,13 @@
 </template>
 
 <script>
+import { fetchAppList } from '@/api/app'
 export default {
   name: 'AppMgnt',
   data() {
     return {
-      appList: [{
+      appList: [],
+      appListTest: [{
         name: 'gs-service',
         memo: 'spring boot gs service',
         createdDate: '2020-08-08',
@@ -203,11 +207,15 @@ export default {
     }
   },
   mounted() {
-
+    fetchAppList().then(response => {
+      // console.log('response:', response)
+      this.appList = response.data.data
+    })
   },
   methods: {
-    guide() {
-
+    formatDate(row, column, date) {
+      date = new Date(date)
+      return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate()
     }
   }
 }
