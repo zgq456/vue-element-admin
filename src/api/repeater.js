@@ -34,3 +34,35 @@ export function updateModuleInfoList(query) {
   })
 }
 
+export function getModuleStatus(query) {
+  return request({
+    url: baseUrl + 'module/getStatus',
+    method: 'post',
+    params: query
+  })
+}
+
+export function installModule(query) {
+  return request({
+    url: baseUrl + 'module/install',
+    method: 'post',
+    params: query
+  })
+}
+
+export function attachModule(query) {
+  return request({
+    url: baseUrl + 'module/attach',
+    method: 'post',
+    params: query
+  })
+}
+
+export function detachModule(query) {
+  return request({
+    url: baseUrl + 'module/detach',
+    method: 'post',
+    params: query
+  })
+}
+

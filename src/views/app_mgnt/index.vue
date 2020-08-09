@@ -122,7 +122,7 @@
           width="120px"
         >
           <template slot-scope="scope">
-            {{ scope.row.status }}<i class="el-icon-refresh-right" style="cursor: pointer" />
+            {{ formatStatus(scope.row.status) }}<i :class="{'el-icon-refresh-right': !scope.row.loading, 'el-icon-loading': scope.row.loading}" style="margin-left:3px;cursor: pointer" @click="refreshStatus(scope.row)" />
           </template>
         </el-table-column>
         <el-table-column
@@ -136,7 +136,10 @@
           width="300px"
         >
           <template slot-scope="scope">
-            <el-button size="mini" type="primary" round>安装/冻结/激活</el-button>
+            <!--            安装/冻结/激活-->
+            <el-button v-if="scope.row.status == 'SCRATCH'" size="mini" type="primary" round :loading="scope.row.loading" @click="installSandboxModule(scope.row)">安装</el-button>
+            <el-button v-if="scope.row.status == 'DETACH'" size="mini" type="primary" round :loading="scope.row.loading" @click="attachSandboxModule(scope.row)">attach</el-button>
+            <el-button v-if="scope.row.status == 'ACTIVE'" size="mini" type="primary" round :loading="scope.row.loading" @click="detachSandboxModule(scope.row)">detach</el-button>
             <el-button size="mini" type="primary" round @click="toUpdateModule(scope.row)">修改</el-button>
             <el-button size="mini" type="primary" round>删除</el-button>
           </template>
@@ -156,7 +159,7 @@
 </template>
 
 <script>
-import { fetchAppList, fetchConfigInfoList, fetchModuleInfoList } from '@/api/repeater'
+import { fetchAppList, fetchConfigInfoList, fetchModuleInfoList, getModuleStatus, installModule, attachModule, detachModule } from '@/api/repeater'
 import updateModule from './update_module'
 
 export default {
@@ -171,14 +174,33 @@ export default {
       appList: [],
       envList: [],
       moduleList: [],
-      updateModuleDialogVisible: false
-
+      updateModuleDialogVisible: false,
+      statusDict: {
+        'OFFLINE': '已离线',
+        'SCRATCH': '未安装',
+        'APP_DOWN': '应用未启动',
+        'DETACH': 'detached',
+        'ACTIVE': 'attached',
+        'FROZEN': '已冻结'
+      }
     }
   },
   mounted() {
     this.loadAppList()
   },
   methods: {
+    refreshStatus(moduleInfo) {
+      this.$set(moduleInfo, 'loading', true)
+      this.$set(moduleInfo, 'status', '')
+      getModuleStatus({ id: moduleInfo.id }).then(response => {
+        // console.log('getModuleStatus response:', response)
+        this.$set(moduleInfo, 'loading', false)
+        this.$set(moduleInfo, 'status', response)
+      })
+    },
+    formatStatus(status) {
+      return this.statusDict[status]
+    },
     formatDate(row, column, date) {
       date = new Date(date)
       return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate()
@@ -220,6 +242,45 @@ export default {
     },
     reloadModuleData() {
       this.showModuleInfoList(this.currentConfig)
+    },
+    installSandboxModule(module) {
+      this.$set(module, 'loading', true)
+      installModule({ id: module.id }).then(response => {
+        // console.log('installModule response:', response)
+        this.$set(module, 'status', response.status)
+        this.$set(module, 'loading', false)
+        if (response.success) {
+          this.$message({ message: '操作成功', type: 'success' })
+        } else {
+          this.$message.error('操作失败')
+        }
+      })
+    },
+    attachSandboxModule(module) {
+      this.$set(module, 'loading', true)
+      attachModule({ id: module.id }).then(response => {
+        // console.log('installModule response:', response)
+        this.$set(module, 'status', response.status)
+        this.$set(module, 'loading', false)
+        if (response.success) {
+          this.$message({ message: '操作成功', type: 'success' })
+        } else {
+          this.$message.error('操作失败')
+        }
+      })
+    },
+    detachSandboxModule(module) {
+      this.$set(module, 'loading', true)
+      detachModule({ id: module.id }).then(response => {
+        // console.log('installModule response:', response)
+        this.$set(module, 'status', response.status)
+        this.$set(module, 'loading', false)
+        if (response.success) {
+          this.$message({ message: '操作成功', type: 'success' })
+        } else {
+          this.$message.error('操作失败')
+        }
+      })
     }
   }
 }
