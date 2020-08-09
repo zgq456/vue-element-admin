@@ -119,7 +119,7 @@
         <el-table-column
           prop="status"
           label="状态"
-          width="100px"
+          width="120px"
         >
           <template slot-scope="scope">
             {{ scope.row.status }}<i class="el-icon-refresh-right" style="cursor: pointer" />
@@ -136,89 +136,43 @@
           width="300px"
         >
           <template slot-scope="scope">
-            <el-button size="mini" type="primary" round>冻结/激活</el-button>
-            <el-button size="mini" type="primary" round>修改</el-button>
+            <el-button size="mini" type="primary" round>安装/冻结/激活</el-button>
+            <el-button size="mini" type="primary" round @click="toUpdateModule(scope.row)">修改</el-button>
             <el-button size="mini" type="primary" round>删除</el-button>
           </template>
         </el-table-column>
       </el-table>
       <el-row style="margin-top: 5px;">
-        <el-button size="mini" type="primary" round>增加机器</el-button>
+        <el-button size="mini" type="primary" round @click="toAddModule">增加机器</el-button>
       </el-row>
     </div>
 
+    <updateModule
+      :form-visible.sync="updateModuleDialogVisible"
+      :record-data="currentModule"
+      @onSuccess="reloadModuleData"
+    />
   </div>
 </template>
 
 <script>
-import { fetchAppList, fetchConfigInfoList, fetchModuleInfoList } from '@/api/app'
+import { fetchAppList, fetchConfigInfoList, fetchModuleInfoList } from '@/api/repeater'
+import updateModule from './update_module'
+
 export default {
   name: 'AppMgnt',
+  components: { updateModule },
   data() {
     return {
       currentAppName: null,
       currentEnvName: null,
+      currentConfig: null,
+      currentModule: null,
       appList: [],
-      appListTest: [{
-        name: 'gs-service',
-        memo: 'spring boot gs service',
-        createdDate: '2020-08-08',
-        lastModifiedDate: '2020-08-08'
-      }, {
-        name: 'gs-service2',
-        memo: 'spring boot gs service2',
-        createdDate: '2020-08-08',
-        lastModifiedDate: '2020-08-08'
-      }, {
-        name: 'gs-service3',
-        memo: 'spring boot gs service3',
-        createdDate: '2020-08-08',
-        lastModifiedDate: '2020-08-08'
-      }],
       envList: [],
-      envListTest: [{
-        name: 'test',
-        config: '{sampleRate=10000, plugin=[http, java-entrance, java-subInvoke]}',
-        createdDate: '2020-08-08',
-        lastModifiedDate: '2020-08-08'
-      }, {
-        name: 'release',
-        config: '{sampleRate=10000, plugin=[http, java-entrance, java-subInvoke]}',
-        createdDate: '2020-08-08',
-        lastModifiedDate: '2020-08-08'
-      }],
-      moduleList: [
-        {
-          ip: '192.168.1.1',
-          port: '22',
-          username: 'admin',
-          password: '****',
-          private_rsa_file: '/home/admin/.ssh/id_rsa',
-          createdDate: '2020-08-08',
-          lastModifiedDate: '2020-08-08',
-          status: '已激活'
-        },
-        {
-          ip: '192.168.1.2',
-          port: '22',
-          username: 'admin',
-          password: '****',
-          private_rsa_file: '/home/admin/.ssh/id_rsa',
-          createdDate: '2020-08-08',
-          lastModifiedDate: '2020-08-08',
-          status: '已冻结'
-        },
-        {
-          ip: '192.168.1.3',
-          port: '22',
-          username: 'admin',
-          password: '****',
-          private_rsa_file: '/home/admin/.ssh/id_rsa',
-          createdDate: '2020-08-08',
-          lastModifiedDate: '2020-08-08',
-          status: '已停止'
-        }
-      ]
+      moduleList: [],
+      updateModuleDialogVisible: false
+
     }
   },
   mounted() {
@@ -237,6 +191,7 @@ export default {
     },
     showModuleConfigList(app) {
       this.currentAppName = app.name
+      this.currentConfig = null
       this.currentEnvName = null
       const appId = app.id
       fetchConfigInfoList({ appId }).then(response => {
@@ -245,14 +200,27 @@ export default {
       })
     },
     showModuleInfoList(config) {
+      this.currentConfig = config
       this.currentEnvName = config.environment
       const configId = config.id
       fetchModuleInfoList({ configId }).then(response => {
         // console.log('response:', response)
         this.moduleList = response
       })
+    },
+    toUpdateModule(module) {
+      this.currentModule = module
+      this.$set(this.currentModule, 'moduleConfigId', this.currentConfig.id)
+      this.updateModuleDialogVisible = true
+    },
+    toAddModule(module) {
+      this.currentModule = {}
+      this.$set(this.currentModule, 'moduleConfigId', this.currentConfig.id)
+      this.updateModuleDialogVisible = true
+    },
+    reloadModuleData() {
+      this.showModuleInfoList(this.currentConfig)
     }
-
   }
 }
 </script>

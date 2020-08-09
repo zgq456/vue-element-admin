@@ -26,3 +26,11 @@ export function fetchModuleInfoList(query) {
   })
 }
 
+export function updateModuleInfoList(query) {
+  return request({
+    url: baseUrl + 'module/update',
+    method: 'post',
+    params: query
+  })
+}
+
