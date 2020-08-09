@@ -113,7 +113,7 @@
           width="100px"
         />
         <el-table-column
-          prop="private_rsa_file"
+          prop="privateRsaFile"
           label="密钥文件"
         />
         <el-table-column
