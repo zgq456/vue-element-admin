@@ -117,6 +117,10 @@
           label="密钥文件"
         />
         <el-table-column
+          prop="preCommand"
+          label="前置命令"
+        />
+        <el-table-column
           prop="status"
           label="状态"
           width="120px"

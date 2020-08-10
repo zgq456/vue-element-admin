@@ -78,8 +78,20 @@ export const constantRoutes = [
       {
         path: '/app_mgnt/index',
         component: () => import('@/views/app_mgnt/index'),
-        name: 'Guide',
+        name: 'AppConfig',
         meta: { title: '配置管理', icon: 'guide', noCache: true }
+      }
+    ]
+  },
+  {
+    path: '/repeater',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/repeater_mgnt/index'),
+        name: 'RepeaterMgnt',
+        meta: { title: '录制回放管理', icon: 'documentation', affix: true }
       }
     ]
   }

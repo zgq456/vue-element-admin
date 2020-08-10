@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import JsonViewer from 'vue-json-viewer'
 
 import Cookies from 'js-cookie'
 
@@ -19,6 +20,8 @@ import './permission' // permission control
 import './utils/error-log' // error log
 
 import * as filters from './filters' // global filters
+
+Vue.use(JsonViewer)
 
 /**
  * If you don't want to use mock-server

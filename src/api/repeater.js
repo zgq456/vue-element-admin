@@ -66,3 +66,18 @@ export function detachModule(query) {
   })
 }
 
+export function fetchRecordList(query) {
+  return request({
+    url: baseUrl + 'record/list',
+    method: 'get',
+    params: query
+  })
+}
+
+export function fetchRecordDetail(query) {
+  return request({
+    url: baseUrl + 'record/detail',
+    method: 'get',
+    params: query
+  })
+}
