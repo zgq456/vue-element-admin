@@ -81,3 +81,35 @@ export function fetchRecordDetail(query) {
     params: query
   })
 }
+
+export function fetchEnv(query) {
+  return request({
+    url: baseUrl + 'replay/fetchEnv',
+    method: 'get',
+    params: query
+  })
+}
+
+export function fetchHost(query) {
+  return request({
+    url: baseUrl + 'replay/fetchHost',
+    method: 'get',
+    params: query
+  })
+}
+
+export function executeReplay(query) {
+  return request({
+    url: baseUrl + 'replay/execute',
+    method: 'post',
+    params: query
+  })
+}
+
+export function fetchReplay(query) {
+  return request({
+    url: baseUrl + 'replay/list',
+    method: 'get',
+    params: query
+  })
+}

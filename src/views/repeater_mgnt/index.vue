@@ -45,7 +45,7 @@
       >
         <template slot-scope="scope">
           <el-button size="mini" type="primary" round @click="getRecordDetail(scope.row, scope.$index)">详情</el-button>
-          <el-button size="mini" type="primary" round>回放</el-button>
+          <el-button size="mini" type="primary" round @click="toReplay(scope.row, scope.$index)">回放</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -75,7 +75,7 @@
               :expand-depth="5"
               copyable
               boxed
-/>
+            />
 
           </pre>
           <h4>返回结果</h4>
@@ -97,33 +97,105 @@
 />
           </pre>
         </el-tab-pane>
-        <el-tab-pane label="回放管理" name="second">回放管理</el-tab-pane>
+        <el-tab-pane label="回放管理" name="second">
+          <el-table
+            :data="replayList"
+            style="width: 100%"
+          >
+            <el-table-column type="expand">
+              <template slot-scope="props">
+                <h3>响应：</h3>
+                <json-viewer
+                  :value="props.row.response"
+                  :expand-depth="5"
+                  copyable
+                  boxed
+                />
+
+                <h3>差异：</h3>
+                <json-viewer
+                  :value="props.row.differences"
+                  :expand-depth="5"
+                  copyable
+                  boxed
+                />
+
+                <h3>mockInvocations：</h3>
+                <json-viewer
+                  :value="props.row.mockInvocations"
+                  :expand-depth="5"
+                  copyable
+                  boxed
+                />
+              </template>
+            </el-table-column>
+            <el-table-column
+              type="index"
+              width="50"
+            />
+            <el-table-column
+              prop="environment"
+              label="环境"
+              width="60px"
+            />
+            <el-table-column
+              prop="ip"
+              label="机器"
+              width="120px"
+            />
+            <el-table-column
+              prop="success"
+              label="成功"
+              width="120px"
+              align="center"
+            >
+              <template slot-scope="scope">
+                <i v-if="scope.row.success" class="el-icon-check" />
+                <i v-else class="el-icon-close" />
+              </template>
+            </el-table-column>
+            <el-table-column
+              prop="cost"
+              label="耗时(ms)"
+              width="80px"
+            />
+            <el-table-column
+              prop="gmtCreate"
+              label="创建时间"
+              :formatter="formatDate"
+              width="150px"
+            />
+
+          </el-table>
+
+        </el-tab-pane>
       </el-tabs>
 
     </div>
 
     <hr>
 
-    <updateModule
-      :form-visible.sync="updateModuleDialogVisible"
-      :record-data="currentModule"
-      @onSuccess="reloadModuleData"
+    <replayConfig
+      :form-visible.sync="replayConfigDialogVisible"
+      :record-data="currentRecord"
+      @onSuccess="reloadReplayData"
     />
   </div>
 </template>
 
 <script>
-import { fetchRecordList, fetchRecordDetail, fetchConfigInfoList, fetchModuleInfoList, getModuleStatus, installModule, attachModule, detachModule } from '@/api/repeater'
-import updateModule from './update_module'
+import { fetchRecordList, fetchRecordDetail, fetchReplay, fetchConfigInfoList, fetchModuleInfoList, getModuleStatus, installModule, attachModule, detachModule } from '@/api/repeater'
+import replayConfig from './replay_config'
 
 export default {
   name: 'AppMgnt',
-  components: { updateModule },
+  components: { replayConfig },
   data() {
     return {
       activeName: 'first',
       currentRecord: null,
       currentRecordDetail: null,
+      replayList: [],
 
       // ///////////////////////////////////////
       // ///////////////////////////////////////
@@ -136,7 +208,7 @@ export default {
       recordList: [],
       envList: [],
       moduleList: [],
-      updateModuleDialogVisible: false,
+      replayConfigDialogVisible: false,
       statusDict: {
         'OFFLINE': '已离线',
         'SCRATCH': '未安装',
@@ -180,9 +252,23 @@ export default {
         this.total = response.count
       })
     },
+    loadReplayList(recordId) {
+      fetchReplay({ recordId: recordId }).then(response => {
+        console.log('replay response:', response)
+        this.replayList = response.data
+        if (this.replayList) {
+          this.replayList.forEach(replay => {
+            if (replay.response) {
+              replay.response = JSON.parse(replay.response)
+            }
+          })
+        }
+      })
+    },
     getRecordDetail(record, index) {
       this.currentIndex = index + 1
       this.currentRecord = record
+
       fetchRecordDetail({ id: record.id }).then(response => {
         // console.log('response:', response)
         const currentRecordDetail = response
@@ -191,6 +277,15 @@ export default {
         currentRecordDetail.subInvocations = JSON.parse(currentRecordDetail.subInvocations)
         this.currentRecordDetail = currentRecordDetail
       })
+
+      this.loadReplayList(record.id)
+    },
+    toReplay(record, index) {
+      this.getRecordDetail(record, index)
+      this.replayConfigDialogVisible = true
+    },
+    reloadReplayData() {
+      this.loadReplayList(this.currentRecord.id)
     },
 
     // ////////////////////////////////////////////////////
@@ -207,19 +302,13 @@ export default {
         this.moduleList = response
       })
     },
-    toUpdateModule(module) {
-      this.currentModule = module
-      this.$set(this.currentModule, 'moduleConfigId', this.currentConfig.id)
-      this.updateModuleDialogVisible = true
-    },
+
     toAddModule(module) {
       this.currentModule = {}
       this.$set(this.currentModule, 'moduleConfigId', this.currentConfig.id)
-      this.updateModuleDialogVisible = true
+      this.replayConfigDialogVisible = true
     },
-    reloadModuleData() {
-      this.showModuleInfoList(this.currentConfig)
-    },
+
     installSandboxModule(module) {
       this.$set(module, 'loading', true)
       installModule({ id: module.id }).then(response => {
