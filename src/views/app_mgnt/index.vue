@@ -29,13 +29,13 @@
       >
         <template slot-scope="scope">
           <el-button size="mini" type="primary" round @click="showModuleConfigList(scope.row)">环境</el-button>
-          <el-button size="mini" type="primary" round>修改</el-button>
+          <el-button size="mini" type="primary" round @click="toUpdateApp(scope.row)">修改</el-button>
           <el-button size="mini" type="primary" round>删除</el-button>
         </template>
       </el-table-column>
     </el-table>
     <el-row style="margin-top: 5px;">
-      <el-button size="mini" type="primary" round>增加应用</el-button>
+      <el-button size="mini" type="primary" round @click="toAddApp()">增加应用</el-button>
     </el-row>
 
     <div v-if="currentAppName">
@@ -76,13 +76,13 @@
           <template slot-scope="scope">
             <!--          <el-button size="mini" type="primary" round >推送</el-button> 修改后提示推送-->
             <el-button size="mini" type="primary" round @click="showModuleInfoList(scope.row)">机器</el-button>
-            <el-button size="mini" type="primary" round>修改</el-button>
+            <el-button size="mini" type="primary" round @click="toUpdateModuleConfig(scope.row)">修改</el-button>
             <el-button size="mini" type="primary" round>删除</el-button>
           </template>
         </el-table-column>
       </el-table>
       <el-row style="margin-top: 5px;">
-        <el-button size="mini" type="primary" round>增加环境配置</el-button>
+        <el-button size="mini" type="primary" round @click="toAddModuleConfig()">增加环境配置</el-button>
       </el-row>
     </div>
 
@@ -159,26 +159,44 @@
       :record-data="currentModule"
       @onSuccess="reloadModuleData"
     />
+
+    <updateApp
+      :form-visible.sync="updateAppDialogVisible"
+      :record-data="currentApp"
+      @onSuccess="loadAppList"
+    />
+
+    <updateConfig
+      :form-visible.sync="updateConfigDialogVisible"
+      :record-data="currentConfig"
+      @onSuccess="reloadConfigData"
+    />
+
   </div>
 </template>
 
 <script>
 import { fetchAppList, fetchConfigInfoList, fetchModuleInfoList, getModuleStatus, installModule, attachModule, detachModule } from '@/api/repeater'
 import updateModule from './update_module'
+import updateApp from './update_app'
+import updateConfig from './update_config'
 
 export default {
   name: 'AppMgnt',
-  components: { updateModule },
+  components: { updateModule, updateApp, updateConfig },
   data() {
     return {
       currentAppName: null,
       currentEnvName: null,
       currentConfig: null,
       currentModule: null,
+      currentApp: null,
       appList: [],
       envList: [],
       moduleList: [],
       updateModuleDialogVisible: false,
+      updateAppDialogVisible: false,
+      updateConfigDialogVisible: false,
       statusDict: {
         'OFFLINE': '已离线',
         'SCRATCH': '未安装',
@@ -193,6 +211,28 @@ export default {
     this.loadAppList()
   },
   methods: {
+    reloadConfigData() {
+      this.showModuleConfigList(this.currentApp)
+    },
+    toUpdateModuleConfig(config) {
+      this.currentConfig = config
+      this.$set(this.currentConfig, 'appId', this.currentApp.id)
+      this.updateConfigDialogVisible = true
+    },
+    toAddModuleConfig(config) {
+      console.log('###', this.currentApp)
+      this.currentConfig = {}
+      this.$set(this.currentConfig, 'appId', this.currentApp.id)
+      this.updateConfigDialogVisible = true
+    },
+    toUpdateApp(app) {
+      this.currentApp = app
+      this.updateAppDialogVisible = true
+    },
+    toAddApp(app) {
+      this.currentApp = {}
+      this.updateAppDialogVisible = true
+    },
     refreshStatus(moduleInfo) {
       this.$set(moduleInfo, 'loading', true)
       this.$set(moduleInfo, 'status', '')
@@ -216,6 +256,8 @@ export default {
       })
     },
     showModuleConfigList(app) {
+      console.log('###app:', app)
+      this.currentApp = app
       this.currentAppName = app.name
       this.currentConfig = null
       this.currentEnvName = null
