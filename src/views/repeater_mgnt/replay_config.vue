@@ -42,7 +42,7 @@
       <el-row>
         <el-col align="center">
           <el-button type="primary" :loading="loading" size="mini" @click.native="saveRecord">回放</el-button>
-          <el-button size="mini" @click.native="onClosed">取消</el-button>
+          <el-button size="mini" @click.native="onClosed">关闭</el-button>
         </el-col>
       </el-row>
 
@@ -51,7 +51,7 @@
 </template>
 
 <script>
-import { fetchEnv, fetchHost, executeReplay } from '@/api/repeater'
+import { fetchEnv, fetchHost, executeReplay, fetchReplay } from '@/api/repeater'
 export default {
   props: {
     formVisible: {
@@ -101,6 +101,7 @@ export default {
     onClosed() {
       this.resetForm()
       this.$emit('update:formVisible', false)
+      this.$emit('onSuccess')
     },
     resetForm() {
       this.$refs.addForm.resetFields()
@@ -129,7 +130,7 @@ export default {
         this.hostOptions = response
       })
     },
-    saveRecord() {
+    async saveRecord() {
       this.loading = true
       const param = {
         traceId: this.formData.traceId,
@@ -137,18 +138,26 @@ export default {
         isMock: this.formData.isMock
       }
 
-      executeReplay(param).then(response => {
-        // console.log('executeReplay response:', response)
-        if (response.success) {
-          this.$message({ message: '操作成功，请到详情中的回访管理查看明细', type: 'success' })
-          this.$emit('onSuccess')
-          this.onClosed()
-        } else {
-          this.$message.error('操作失败')
-        }
+      let replayResponse = await executeReplay(param)
+      // console.log('replayResponse:', replayResponse)
+      if (!replayResponse.success) {
+        this.$message.error('操作失败')
+        return
+      }
 
-        this.loading = false
-      })
+      let repeatId = replayResponse.data
+      let replayFinalResponse
+      let replayStatus
+      do {
+        replayFinalResponse = await fetchReplay({ repeatId })
+        replayStatus = replayFinalResponse.data[0].status
+        console.log('replayFinalResponse:', replayFinalResponse)
+      } while(replayStatus != 'FINISH' && replayStatus != 'FAILED')
+
+      this.loading = false
+      this.$message({ message: '操作成功，请到详情中的回访管理查看明细', type: 'success' })
+      this.onClosed()
+
     }
   }
 }
